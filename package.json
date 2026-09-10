@@ -1,0 +1,17 @@
+{
+  "name": "wordly",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Thai-friendly English vocabulary practice with 400 words",
+  "scripts": {
+    "dev": "node scripts/serve.cjs",
+    "start": "node scripts/serve.cjs",
+    "test": "node --test tests/study.test.cjs",
+    "test:browser": "node tests/browser.cjs",
+    "test:sentences": "node tests/sentences.cjs",
+    "test:feedback": "node tests/feedback.cjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}

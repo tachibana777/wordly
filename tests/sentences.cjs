@@ -1,0 +1,56 @@
+const { chromium } = require('@playwright/test');
+const assert = require('node:assert/strict');
+const { pathToFileURL } = require('node:url');
+const path = require('node:path');
+
+(async () => {
+    const browser = await chromium.launch({ headless: true, ...(process.env.BROWSER_CHANNEL ? { channel: process.env.BROWSER_CHANNEL } : {}) });
+    try {
+        const page = await browser.newPage();
+        const errors = [];
+        page.on('pageerror', error => errors.push(error.message));
+        await page.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href + '#sentences');
+        const find = selector => page.locator('#sentences-page ' + selector);
+        assert.equal(await find('.sentence-question').textContent(), 'ฉันกินอาหาร');
+        await find('.sentence-check').click();
+        assert.match(await find('.sentence-feedback').textContent(), /ลองใส่/);
+        await find('.sentence-bank').getByRole('button', { name: 'food', exact: true }).click();
+        await find('.sentence-selected button').click();
+        assert.equal(await find('.sentence-selected button').count(), 0);
+        for (const word of ['food', 'eat', 'I']) await find('.sentence-bank').getByRole('button', { name: word, exact: true }).click();
+        await find('.sentence-check').click();
+        assert.match(await find('.sentence-feedback').textContent(), /ลำดับคำ/);
+        await find('.sentence-clear').click();
+        for (const word of ['I', 'eat', 'food']) await find('.sentence-bank').getByRole('button', { name: word, exact: true }).click();
+        await find('.sentence-check').click();
+        assert.match(await find('.sentence-feedback').textContent(), /ถูกต้อง/);
+        await find('.sentence-hint-button').click();
+        assert.equal(await find('#sentence-hint').isVisible(), true);
+        await find('.sentence-next').click();
+        assert.equal(await find('#sentence-hint').isVisible(), false);
+        await find('[data-level="hard"]').click();
+        assert.equal(await find('.sentence-bank').isVisible(), false);
+        await find('#sentence-input').fill('i   EAT food!');
+        await find('.sentence-check').click();
+        assert.match(await find('.sentence-feedback').textContent(), /ถูกต้อง/);
+        await find('.sentence-next').click();
+        await find('#sentence-input').fill('Every day she drinks water.');
+        await find('.sentence-check').click();
+        assert.match(await find('.sentence-feedback').textContent(), /ถูกต้อง/);
+        await find('.sentence-next').click();
+        await find('.sentence-reveal').click();
+        assert.equal(await find('.sentence-solution p').textContent(), 'I like cats');
+        await find('.sentence-clear').click();
+        assert.equal(await find('.sentence-solution').isVisible(), false);
+        for (let i = 0; i < 20; i++) await find('.sentence-next').click();
+        assert.equal(await find('.sentence-question').textContent(), 'ฉันชอบแมว');
+        await page.setViewportSize({ width: 375, height: 812 });
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+        await page.locator('[data-page="practice"]').click();
+        assert.equal(await find('.sentence-question').isVisible(), false);
+        await page.locator('[data-page="sentences"]').click();
+        assert.equal(await find('.sentence-question').isVisible(), true);
+        assert.deepEqual(errors, []);
+        console.log('Sentence modes, retry, hints, reveal, alternatives, navigation, wraparound and mobile checks passed.');
+    } finally { await browser.close(); }
+})().catch(error => { console.error(error); process.exitCode = 1; });
