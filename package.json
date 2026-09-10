@@ -4,14 +4,29 @@
   "private": true,
   "description": "Thai-friendly English vocabulary practice with 400 words",
   "scripts": {
-    "dev": "node scripts/serve.cjs",
-    "start": "node scripts/serve.cjs",
-    "test": "node --test tests/study.test.cjs",
-    "test:browser": "node tests/browser.cjs",
-    "test:sentences": "node tests/sentences.cjs",
-    "test:feedback": "node tests/feedback.cjs"
+    "dev": "node scripts/next.mjs dev --webpack --hostname 127.0.0.1 --port 4173",
+    "build": "node scripts/next.mjs build --webpack",
+    "start": "node scripts/next.mjs start --hostname 127.0.0.1 --port 4173",
+    "typecheck": "tsc --noEmit",
+    "db:up": "docker compose up -d db",
+    "db:migrate": "node --env-file=.env scripts/migrate.mjs",
+    "test": "tsx --test tests/*.test.ts",
+    "test:browser": "tsx tests/app.browser.ts"
   },
   "devDependencies": {
-    "@playwright/test": "^1.63.0"
+    "@next/swc-wasm-nodejs": "^16.3.4",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^22.20.2",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "next": "^16.3.4",
+    "pg": "^8.23.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   }
 }

@@ -1,9 +1,9 @@
-@font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 400; font-display: swap; src: url('../../assets/fonts/dm-sans-400.ttf') format('truetype'); }
-@font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 600; font-display: swap; src: url('../../assets/fonts/dm-sans-600.ttf') format('truetype'); }
-@font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 700; font-display: swap; src: url('../../assets/fonts/dm-sans-700.ttf') format('truetype'); }
-@font-face { font-family: 'Noto Sans Thai'; font-style: normal; font-weight: 400; font-display: swap; src: url('../../assets/fonts/noto-sans-thai-400.ttf') format('truetype'); }
-@font-face { font-family: 'Noto Sans Thai'; font-style: normal; font-weight: 600; font-display: swap; src: url('../../assets/fonts/noto-sans-thai-600.ttf') format('truetype'); }
-@font-face { font-family: 'Noto Sans Thai'; font-style: normal; font-weight: 700; font-display: swap; src: url('../../assets/fonts/noto-sans-thai-700.ttf') format('truetype'); }
+@font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 400; font-display: swap; src: url('/assets/fonts/dm-sans-400.ttf') format('truetype'); }
+@font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 600; font-display: swap; src: url('/assets/fonts/dm-sans-600.ttf') format('truetype'); }
+@font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 700; font-display: swap; src: url('/assets/fonts/dm-sans-700.ttf') format('truetype'); }
+@font-face { font-family: 'Noto Sans Thai'; font-style: normal; font-weight: 400; font-display: swap; src: url('/assets/fonts/noto-sans-thai-400.ttf') format('truetype'); }
+@font-face { font-family: 'Noto Sans Thai'; font-style: normal; font-weight: 600; font-display: swap; src: url('/assets/fonts/noto-sans-thai-600.ttf') format('truetype'); }
+@font-face { font-family: 'Noto Sans Thai'; font-style: normal; font-weight: 700; font-display: swap; src: url('/assets/fonts/noto-sans-thai-700.ttf') format('truetype'); }
 
 :root {
     --bg: #f7f8fa;
