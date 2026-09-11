@@ -5,7 +5,7 @@ const PREFIX = '$scrypt$131072$8$1$';
 const DUMMY = PREFIX + '0'.repeat(32) + '$' + '0'.repeat(128);
 const state = globalThis as typeof globalThis & {wordlyHashJobs?: number};
 export function validatePassword(value: unknown): asserts value is string {
-  if (typeof value !== 'string' || value.length > 256 || [...value].length < 15 || [...value].length > 128 || !value.trim()) throw new ApiError(400, 'ใช้รหัสผ่าน 15–128 ตัวอักษร เช่น วลีหลายคำที่จำได้ง่าย');
+  if (typeof value !== 'string' || value.length > 256 || [...value].length < 8 || [...value].length > 128 || !value.trim()) throw new ApiError(400, 'ใช้รหัสผ่าน 8–128 ตัวอักษร เช่น วลีหลายคำที่จำได้ง่าย');
 }
 function derive(password: string, salt: Buffer): Promise<Buffer> {
   // Bound memory use even when many requests arrive at once (128 MiB per job).

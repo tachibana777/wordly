@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { hashPassword, validatePassword, verifyPassword } from '../src/server/password';
 test('password policy allows long passphrases, spaces and Unicode, without silently trimming', () => {
-  for(const value of ['a memorable phrase for learning','ภาษาไทยใช้เป็นรหัสผ่านได้เลย','🙂'.repeat(15),'a'.repeat(128)]) assert.doesNotThrow(()=>validatePassword(value));
-  for(const value of [null,{},'', 'a'.repeat(14),'a'.repeat(129),' '.repeat(20)]) assert.throws(()=>validatePassword(value));
+  for(const value of ['a'.repeat(8),'a memorable phrase for learning','ภาษาไทยใช้เป็นรหัสผ่านได้เลย','🙂'.repeat(8),'a'.repeat(128)]) assert.doesNotThrow(()=>validatePassword(value));
+  for(const value of [null,{},'', 'a'.repeat(7),'🙂'.repeat(7),'a'.repeat(129),' '.repeat(20)]) assert.throws(()=>validatePassword(value));
 });
 test('passwords use unique salts and scrypt, verify exactly and reject malformed hashes', async () => {
   const password='a memorable phrase for learning';
