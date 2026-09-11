@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, type FormEvent } from 'react';
 import { sentences, sentenceAnswers } from '@/data/sentences';
+import { post } from '@/lib/api';
 export function Sentences() {
   const [mode, setMode] = useState<'easy' | 'hard'>('easy');
   const [positions, setPositions] = useState({easy: 0, hard: 0});
@@ -26,6 +27,8 @@ function SentenceExercise({mode, position, next}: {mode: 'easy' | 'hard'; positi
     const value = mode === 'hard' ? typed : selected.map(id => bank.find(w => w.id === id)!.text).join(' ');
     if (!value.trim()) {setMessage('ลองแต่งประโยคก่อนตรวจคำตอบ'); return;}
     const correct = !!sentenceAnswers.check(item, value); setSolved(correct); setSolution(correct);
+    void post('/api/learning', {id:crypto.randomUUID(),kind:'sentence',itemId:String(item.id),mode,status:correct ? 'known' : 'practice',score:correct ? 1 : 0})
+      .catch(() => setMessage(previous => previous + ' · ส่งกิจกรรมการเรียนไม่สำเร็จ แต่ฝึกต่อได้'));
     setMessage(correct ? 'ถูกต้อง! แต่งประโยคได้แล้ว' : 'ยังไม่ตรงกับคำตอบ ลองเรียงคำหรือแก้ประโยคอีกครั้ง');
   }
   function clear() {setSelected([]); setTyped(''); setSolved(false); setSolution(false); setMessage('');}

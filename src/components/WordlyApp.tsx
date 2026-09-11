@@ -41,7 +41,11 @@ export function WordlyApp({user}: {user: User}) {
   }
   function selectCategory(category: string) {storage!.setCategory(category); refresh(n => n + 1); nextWord(category); document.querySelector('.study-toolbar')?.scrollIntoView({behavior: 'smooth', block: 'start'});}
   function setMode(mode: boolean) {setReview(mode); nextWord(storage!.state.category, mode);}
-  function rate(id: string, status: WordStatus, score?: Score) {storage!.rate(id, status, score); refresh(n => n + 1);}
+  function rate(id: string, status: WordStatus, score?: Score) {
+    storage!.rate(id, status, score); refresh(n => n + 1);
+    void post('/api/learning', {id:crypto.randomUUID(),kind:'word',itemId:id,status,score})
+      .catch(() => announce('บันทึกในเครื่องแล้ว แต่ส่งกิจกรรมการเรียนไม่สำเร็จ'));
+  }
   function importProgress() {
     try {storage!.importLegacy(JSON.parse(localStorage.getItem(LEGACY_KEY) || 'null')); if (!storage!.persistent) throw new Error(); localStorage.setItem(`wordly.imported.${user.id}`, 'yes'); setLegacy(false); refresh(n => n + 1); announce('นำเข้าความคืบหน้าเดิมแล้ว');}
     catch {announce('นำเข้าไม่สำเร็จ ข้อมูลเดิมยังอยู่ในเบราว์เซอร์');}

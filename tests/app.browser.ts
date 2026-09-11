@@ -25,6 +25,7 @@ async function main() {
     client = new pg.Client({connectionString:testUrl.toString()}); await client.connect();
     await client.query(readFileSync('db/001_init.sql','utf8'));
     await client.query(readFileSync('db/002_email_auth.sql','utf8'));
+    await client.query(readFileSync('db/003_admin.sql','utf8'));
     const probe = createServer();
     await new Promise<void>(resolve => probe.listen(0, '127.0.0.1', resolve));
     const port = (probe.address() as {port:number}).port;
@@ -32,6 +33,7 @@ async function main() {
     const origin = `http://localhost:${port}`;
     const env: NodeJS.ProcessEnv = {...process.env, DATABASE_URL:testUrl.toString(), APP_ORIGIN:origin, NODE_ENV:'development', AUTH_SECRET:randomBytes(32).toString('hex'), TRUSTED_IP_HEADER:''};
     if (process.platform === 'win32') Object.assign(env, {NEXT_TEST_WASM_DIR:path.dirname(require.resolve('@next/swc-wasm-nodejs'))});
+    env.WORDLY_BROWSER_TEST = '1';
     server = spawn(process.execPath, [require.resolve('next/dist/bin/next'), 'dev', '--webpack', '--hostname','127.0.0.1','--port',String(port)], {env, windowsHide:true, stdio:['ignore','pipe','pipe']});
     server.on('error', error => output.push(error.message));
     const capture = (chunk: Buffer) => {output.push(chunk.toString());};
@@ -71,7 +73,7 @@ async function main() {
     await page.locator('#password').fill(password);
     await page.locator('#confirm-password').fill('mismatched password');
     await page.locator('.auth-submit').click();
-    await expect(page.getByRole('alert')).toContainText('ไม่ตรงกัน');
+    await expect(page.locator('.input-error')).toContainText('ไม่ตรงกัน');
     await page.locator('#confirm-password').fill(password);
     await page.getByRole('button',{name:'แสดงรหัสผ่าน',exact:true}).click();
     await expect(page.locator('#password')).toHaveAttribute('type','text');
@@ -79,6 +81,14 @@ async function main() {
     await expect(page.locator('#word-display')).toBeVisible({timeout:60000});
     const me = await (await api.get(origin+'/api/auth/me')).json();
     const firstUserId = me.user.id; assert.equal(me.user.email,email); assert.equal('password_hash' in me.user,false);
+    assert.ok(!(await (await api.get(origin+'/admin')).text()).includes('ภาพรวมการทดลองใช้งาน'));
+    assert.equal((await post('/api/admin/feedback',{id:firstUserId,status:'done'})).status(),403);
+    const learningId = crypto.randomUUID();
+    const learning = {id:learningId,kind:'word',itemId:vocabulary[0].id,status:'known',score:1,userId:'someone-else'};
+    assert.equal((await post('/api/learning',learning)).status(),200);
+    assert.equal((await post('/api/learning',learning)).status(),200);
+    const recorded = await client.query('SELECT user_id FROM learning_events WHERE id=$1',[learningId]);
+    assert.equal(recorded.rowCount,1); assert.equal(recorded.rows[0].user_id,firstUserId);
     assert.equal(Number((await client.query('SELECT count(*) FROM users')).rows[0].count),1);
     const cookie = (await context.cookies()).find(c => c.name==='wordly_session')!;
     assert.ok(cookie.httpOnly); assert.equal(cookie.sameSite,'Lax');
@@ -134,6 +144,19 @@ async function main() {
     await page.locator('#feedback-message').fill(feedbackMessage); await page.getByRole('button',{name:'ส่งความคิดเห็น',exact:true}).click();
     await expect(page.locator('.feedback-status')).toContainText('เรียบร้อย'); await expect(page.locator('#feedback-message')).toHaveValue('');
     const saved = (await client.query('SELECT user_id,message FROM feedback')).rows[0]; assert.equal(saved.user_id,firstUserId); assert.equal(saved.message,feedbackMessage);
+    await client.query('UPDATE users SET is_admin=true WHERE id=$1',[firstUserId]);
+    const adminPage = await context.newPage();
+    await adminPage.goto(origin+'/admin');
+    await expect(adminPage.getByRole('heading',{name:'ภาพรวมการทดลองใช้งาน'})).toBeVisible();
+    await expect(adminPage.locator('.admin-message')).toHaveText(feedbackMessage);
+    await adminPage.getByLabel('สถานะความคิดเห็น').selectOption('planned');
+    await expect.poll(async () => (await client!.query('SELECT status FROM feedback')).rows[0].status).toBe('planned');
+    await adminPage.screenshot({path:'artifacts/admin-desktop.png',fullPage:true});
+    await adminPage.setViewportSize({width:375,height:900});
+    assert.ok(await adminPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    await adminPage.close();
+    await client.query('UPDATE users SET is_admin=false WHERE id=$1',[firstUserId]);
+    assert.ok(!(await (await api.get(origin+'/admin')).text()).includes('ภาพรวมการทดลองใช้งาน'));
     await page.locator('[data-page="practice"]').click(); await page.screenshot({path:'artifacts/practice-desktop.png',fullPage:true});
     for (const width of [320,375,768,1440]) {
       await page.setViewportSize({width,height:1000});
@@ -150,7 +173,7 @@ async function main() {
     await page.locator('#email').fill(email);
     await page.locator('#password').fill('incorrect password');
     await page.locator('.auth-submit').click();
-    await expect(page.getByRole('alert')).toContainText('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+    await expect(page.locator('.input-error')).toContainText('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
     await page.locator('#password').fill(password);
     await page.locator('.auth-submit').click();
     await expect(page.locator('#word-display')).toBeVisible();
